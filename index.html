@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bolão Lotofácil</title>
+</head>
+
+<style>
+
+  #resultado td,#amarrados td{
+    text-align: center;
+    vertical-align: middle;
+    border:1px solid black;
+  } 
+
+  .numero-cartela{
+    width:1.5rem;
+  }
+
+  .primeira-coluna{
+    width: 4rem;
+    text-align: left !important;
+  }
+
+  #amarrados .primeira-coluna{
+    width: 20rem !important;
+  }
+
+  #cartela td{
+    background-color: azure;
+  }
+
+  .marcado{
+    background-color: tomato;
+  }
+
+</style>
+<script type="text/javascript">
+  var qtdNumeroTotalCartela = 25;
+  var qtdNumerosJogados = 15;
+  
+  function gerarNumeros (){
+    //var qtdNumerosAmarrados = document.getElementById("qtdNumerosAmarrados").value;
+    var qtdJogos = document.getElementById("qtdJogos").value;
+    var numerosAmarrados = document.getElementById("numerosAmarrados").value;
+    var arrNumerosAmarrados = extrairNumerosAmarrados(numerosAmarrados);
+    var qtdNumerosAmarrados = arrNumerosAmarrados.length;
+    if(validarCampos(qtdNumerosAmarrados, qtdJogos, arrNumerosAmarrados)){
+      var textoResultado = "";
+      var arrCartelas = [];
+      //var arrNumerosAmarrados = gerarListaNumerosAmarrados(qtdNumerosAmarrados);
+      for(var j = 0; j < qtdJogos; j++){
+        var arrNumerosRestantes = [];
+        var arrNumerosRestantes = arrNumerosAmarrados.map(x => x);
+        var arrNumerosCartela = [];
+        for(var i = 0; i < qtdNumerosJogados; i++){
+          var indice = Math.floor(Math.random() * (qtdNumerosAmarrados - i));
+          arrNumerosCartela.push(arrNumerosRestantes[indice]);
+          arrNumerosRestantes.splice(indice, 1);
+        }
+
+        sort(arrNumerosCartela);
+        if(verificarArrayRepetido(arrNumerosCartela, arrCartelas)){
+          j--;
+        }else{
+          arrCartelas.push(arrNumerosCartela);
+        }
+      }
+      imprimirAmarrados(arrNumerosAmarrados);
+      imprimirResultado(arrCartelas);
+    } 
+  }
+
+  function extrairNumerosAmarrados(numerosText){
+    var listaNumeros = numerosText.split(' ').map(function(item) {
+      return parseInt(item);
+    });
+    sort(listaNumeros);
+    return listaNumeros;
+  }
+
+  function verificarArrayRepetido(arrNumerosCartela, arrCartelas){
+    for (let i = 0; i < arrCartelas.length; i++) {
+      const cartela = arrCartelas[i];
+      var arraysIguais = true;
+      for (let j = 0; j < cartela.length; j++) {
+        if(cartela[j] != arrNumerosCartela[j]){
+          arraysIguais = false;
+          break;
+        }
+      }
+      if(arraysIguais){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function gerarListaNumerosAmarrados(qtdNumerosAmarrados){
+    var arrNumerosRestantes = [];
+    var arrNumerosAmarrados = [];
+    for(var i = 1; i <= qtdNumeroTotalCartela; i++){
+      arrNumerosRestantes.push(i);
+    }
+    for(var i = 0; i < qtdNumerosAmarrados; i++){
+      var indice = Math.floor(Math.random() * (qtdNumeroTotalCartela - i));
+      
+      arrNumerosAmarrados.push(arrNumerosRestantes[indice]);
+      arrNumerosRestantes.splice(indice, 1);
+    }
+    sort(arrNumerosAmarrados);
+    return arrNumerosAmarrados;
+  }
+
+  function imprimirAmarrados(arrNumerosAmarrados){
+    var html="<tr>";
+    html+="<td style='width: 10rem'>Números amarrados</td>";
+    for (let i = 0; i < arrNumerosAmarrados.length; i++) {
+      const numAmarrado = arrNumerosAmarrados[i];
+      html+="<td class='numero-cartela'>"+numAmarrado+"</td>"
+    }
+    html+="</tr>";
+    document.getElementById("amarrados").innerHTML = html;
+  }
+
+  function imprimirResultado(arrCartelas){
+    var html="";
+    for (let i = 0; i < arrCartelas.length; i++) {
+      const cartela = arrCartelas[i];
+      html+="<tr><td class='primeira-coluna'>Jogo "+(i+1)+"</td>";
+
+      for (let j = 0; j < cartela.length; j++) {
+        const numeroCartela = cartela[j];
+        html+="<td class='numero-cartela'>"+numeroCartela+"</td>"
+      }
+      html+="</tr>"
+    }
+    document.getElementById("resultado").innerHTML = html;
+  }
+
+  function validarCampos(qtdNumerosAmarrados, qtdJogos, arrNumerosAmarrados){
+    var msg = "";
+
+    if(qtdNumerosAmarrados < qtdNumerosJogados || qtdNumerosAmarrados > qtdNumeroTotalCartela){
+      msg += "\nA quantidade de números amarrados deve ser entre "+qtdNumerosJogados+ " e "+qtdNumeroTotalCartela;
+    }
+    if(qtdJogos < 1 || qtdJogos > 1000){
+      msg += "\nA quantidade de jogos deve ser no mínimo 1";
+    }
+    for (let index = 0; index < arrNumerosAmarrados.length; index++) {
+      const element = arrNumerosAmarrados[index];
+      if (isNaN(element) || element < 1 || element > qtdNumeroTotalCartela) {
+        msg += "\nTodos os números amarrados precisam estar entre 1 e "+qtdNumeroTotalCartela;
+        break;
+      }
+    }
+    if(msg.length == 0){
+      var qtdJogosPossiveis = fat(qtdNumerosAmarrados) / (fat(qtdNumerosAmarrados - qtdNumerosJogados) * fat(qtdNumerosJogados));
+      if(qtdJogosPossiveis < qtdJogos){
+        msg += "\nNão é possível gerar essa quantidade de jogos com a configuração atual. Tente diminuir o número de jogos ou aumentar os números amarrados";
+      } 
+    }
+    if(msg.length > 0){
+      alert(msg);
+      return false;
+    }
+    return true;
+  }
+
+  function fat(num)
+  {
+      var rval=1;
+      for (var i = 2; i <= num; i++)
+          rval = rval * i;
+      return rval;
+  }
+
+  function sort(numArray){
+    numArray.sort(function(a, b) {
+      return a - b;
+    });
+  }
+
+</script>
+<body>
+  <table>
+    <tr>
+      <td>Quantos jogos deseja gerar?</td>
+      <td>
+        <input type="number" value="" name="" id="qtdJogos">
+      </td>
+    </tr>
+    <tr>
+      <td>Digite os números que deseja amarrar separados por espaço</td>
+      <td>
+        <input type="text" size="60" value="" name="" id="numerosAmarrados">
+      </td>
+    </tr>
+  </table>
+
+  <button onclick="gerarNumeros()">Gerar números</button>
+
+  <table id="amarrados">
+    
+  </table>
+  <table id="resultado">
+    
+  </table>
+</body>
+</html>
